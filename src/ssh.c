@@ -192,27 +192,31 @@ int create_ssh_session(ssh_session *session, const char *address,
     ssh_key key = NULL;
     const char buf_size = 64;
     char password[buf_size] = {};
-    int rc = ssh_getpass("Input private key password or leave blank if you didn't set one: ", password, buf_size, 0, 0);
-    if (rc == -1) {
-      fprintf(stderr, "Failed to read password!\n");
-      return rc;
-    }
-    rc = ssh_pki_import_privkey_file(privkey, strlen(password) != 0 ? password : NULL, NULL, NULL, &key);
-    switch (rc) {
-      case SSH_EOF:
-        fprintf(stderr, "Error reading private key! Either the file doesn't exist or permission denied.\n");
-        ssh_disconnect(*session);
-        ssh_free(*session);
-        return (SSH_ERROR);
-        break;
-      case SSH_ERROR:
-        fprintf(stderr, "Error reading the private key.\n");
-        ssh_disconnect(*session);
-        ssh_free(*session);
-        return (SSH_ERROR);
-        break;
-      default:
-        break;
+    int rc;
+    // try to use empty password first
+    if(ssh_pki_import_privkey_file(privkey, NULL, NULL, NULL, &key)) {
+      rc = ssh_getpass("Input private key password: ", password, buf_size, 0, 0);
+      if (rc == -1) {
+        fprintf(stderr, "Failed to read password!\n");
+        return rc;
+      }
+      rc = ssh_pki_import_privkey_file(privkey, strlen(password) != 0 ? password : NULL, NULL, NULL, &key);
+      switch (rc) {
+        case SSH_EOF:
+          fprintf(stderr, "Error reading private key! Either the file doesn't exist or permission denied.\n");
+          ssh_disconnect(*session);
+          ssh_free(*session);
+          return (SSH_ERROR);
+          break;
+        case SSH_ERROR:
+          fprintf(stderr, "Error reading the private key.\n");
+          ssh_disconnect(*session);
+          ssh_free(*session);
+          return (SSH_ERROR);
+          break;
+        default:
+          break;
+      }
     }
 
     rc = authenticate_privkey(*session, key);
