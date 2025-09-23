@@ -170,6 +170,8 @@ int create_ssh_session(ssh_session *session, const char *address,
   /* SSH Connection Config */
   ssh_options_set(*session, SSH_OPTIONS_HOST, address);
   ssh_options_set(*session, SSH_OPTIONS_PORT, &port);
+  ssh_options_set(*session, SSH_OPTIONS_HOSTKEYS, "+ssh-rsa");
+  ssh_options_set(*session, SSH_OPTIONS_PUBLICKEY_ACCEPTED_TYPES, "+ssh-rsa");
 
   /* Try to establish connection */
   if (ssh_connect(*session) != SSH_OK) {
