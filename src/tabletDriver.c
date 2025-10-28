@@ -81,8 +81,10 @@ void get_pen_device_path(char *pen_device_path, size_t path_len) {
     strcpy(pen_device_path, "/dev/input/event0");
   } else if (strcmp(model, "reMarkable 2.0") == 0) {
     strcpy(pen_device_path, "/dev/input/event1");
-  // Ferrari is the codename for reMarkable Pro
-  } else if (strcmp(model, "reMarkable Ferrari") == 0) {
+  // Ferrari is the codename for reMarkable Paper Pro
+  // rmPro and rmPaper Pro both use event2 for pen input
+  } else if (strcmp(model, "reMarkable Ferrari") == 0 ||
+             strcmp(model, "reMarkable Pro") == 0) {
     strcpy(pen_device_path, "/dev/input/event2");
   } else {
     fprintf(stderr, "Failed to match any known model. Model read is: %s\n", model);
