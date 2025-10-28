@@ -59,11 +59,10 @@ void get_pen_device_path(char *pen_device_path, size_t path_len) {
     exit(1);
   }
 
-  // The longest model name, reMarkable Pro, is 14 characters long
-  // 15 if we include \0
-  // 16 if we include \n, which ssh_channel_read will automatically append
-  char model[16];
-  int len = ssh_channel_read(channel, model, 16, 0);
+  // The longest model name, reMarkable Ferrari, is 18 characters long
+  // 18+2 for \n\0
+  char model[20];
+  int len = ssh_channel_read(channel, model, 20, 0);
   if (len <= 0) {
     fprintf(stderr, "Failed to read model from SSH channel\n");
     ssh_channel_close(channel);
@@ -82,7 +81,8 @@ void get_pen_device_path(char *pen_device_path, size_t path_len) {
     strcpy(pen_device_path, "/dev/input/event0");
   } else if (strcmp(model, "reMarkable 2.0") == 0) {
     strcpy(pen_device_path, "/dev/input/event1");
-  } else if (strcmp(model, "reMarkable Pro") == 0) {
+  // Ferrari is the codename for reMarkable Pro
+  } else if (strcmp(model, "reMarkable Ferrari") == 0) {
     strcpy(pen_device_path, "/dev/input/event2");
   } else {
     fprintf(stderr, "Failed to match any known model. Model read is: %s\n", model);
