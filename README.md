@@ -56,10 +56,6 @@ Report bugs to https://github.com/FreeCap23/reMarkable-tablet-driver/issues.
 ```
 
 # Limitations
-I only tested this driver in KDE Plasma 6.4 under Wayland. It might work on X11, but it hasn't been tested.
-
-Also, I'm not sure if it works on the reMarkable 2 or the Pro. I only have the rm1 to test. If you have an rm2 or pro, you're welcome to try it and submit an issue if it doesn't work.
-
 It is expected you will use plasma settings' (or an equivalent) drawing tablet configuration to get the orientation and the active region right for you. 
 
 # How does this differ from LinusCDE's and Evidlo's drivers?
