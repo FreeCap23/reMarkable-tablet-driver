@@ -51,27 +51,43 @@ void get_pen_device_path(char *pen_device_path, size_t path_len) {
     ssh_channel_free(channel);
     exit(1);
   }
-  rc = ssh_channel_request_exec(channel, "readlink -f /dev/input/touchscreen0");
+  rc = ssh_channel_request_exec(channel, "cat /sys/devices/soc0/machine");
   if (rc != SSH_OK) {
-    fprintf(stderr, "Failed to exec readlink command\n");
+    fprintf(stderr, "Failed to exec cat command to determine tablet model\n");
     ssh_channel_close(channel);
     ssh_channel_free(channel);
     exit(1);
   }
-  int len = ssh_channel_read(channel, pen_device_path, path_len - 1, 0);
+
+  // The longest model name, reMarkable Pro, is 14 characters long
+  // 15 if we include \0
+  // 16 if we include \n, which ssh_channel_read will automatically append
+  char model[16];
+  int len = ssh_channel_read(channel, model, 16, 0);
   if (len <= 0) {
-    fprintf(stderr, "Failed to read pen device path from SSH channel\n");
+    fprintf(stderr, "Failed to read model from SSH channel\n");
     ssh_channel_close(channel);
     ssh_channel_free(channel);
     exit(1);
   }
-  pen_device_path[len] = '\0';
-  // Remove trailing newline if present
-  char *newline = strchr(pen_device_path, '\n');
-  if (newline) *newline = '\0';
   ssh_channel_send_eof(channel);
   ssh_channel_close(channel);
   ssh_channel_free(channel);
+
+  // Replace the \n with \0, if any
+  char *newline = strchr(model, '\n');
+  if (newline) *newline = '\0';
+
+  if (strcmp(model, "reMarkable 1.0") == 0) {
+    strcpy(pen_device_path, "/dev/input/event0");
+  } else if (strcmp(model, "reMarkable 2.0") == 0) {
+    strcpy(pen_device_path, "/dev/input/event1");
+  } else if (strcmp(model, "reMarkable Pro") == 0) {
+    strcpy(pen_device_path, "/dev/input/event2");
+  } else {
+    fprintf(stderr, "Failed to match any known model. Model read is: %s\n", model);
+  }
+
   print_verbose("Pen device path is: %s\n", pen_device_path);
 }
 
@@ -149,7 +165,8 @@ void read_remote_input_event(struct input_event *ie) {
 
 /* Gets the input event from the tablet using SSH */
 struct input_event get_input_event() {
-    static char pen_device_path[128] = "";
+    // "/dev/input/eventX\0" is 18 characters long
+    static char pen_device_path[18] = "";
     static int channel_opened = 0;
     struct input_event ie;
     // Only detect the pen device path and open channel once
